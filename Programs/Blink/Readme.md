@@ -40,7 +40,8 @@ Since pin PA0 operates in output mode (General purpose output push-pull(CNF) and
 is CNF0[1:0] = 00, and MODE0[1:0] = 01. These bits can be set as:
 
   GPIOA->CRL &= ~(GPIO_CRL_MODE0 | GPIO_CRL_CNF0); //clears MODE0 and CNF0 bits and remaining bits is unchanged
-	GPIOA->CRL |= GPIO_CRL_MODE0_0; //since MODE[0] is only bit containing 1, this line is sufficient to define output behavior of PA0
+  
+  GPIOA->CRL |= GPIO_CRL_MODE0_0; //since MODE[0] is only bit containing 1, this line is sufficient to define output behavior of PA0
 
  Now the delay function can be defined and called after toggling PA0 inside a loop.
 
