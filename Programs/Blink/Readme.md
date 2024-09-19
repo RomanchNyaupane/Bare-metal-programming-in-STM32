@@ -51,3 +51,16 @@ is CNF0[1:0] = 00, and MODE0[1:0] = 01. These bits can be set as:
 	}
 
 The toggling can be done using Output Data Register (GPIOA_ODR) or using Bit Set/Reset Register (GPIOA_BSRR). 
+
+II. Blink using built in timers
+
+Algorithm:
+1. Setup internal HSI clock.
+   
+2. Configure timer and timer registers.
+   
+3. Configure GPIO registers.
+
+To setup internal HSI clock, use Clock configuration registers in Reset and Clock Control block
+
+   
