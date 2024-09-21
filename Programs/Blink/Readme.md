@@ -61,6 +61,30 @@ Algorithm:
    
 3. Configure GPIO registers.
 
-To setup internal HSI clock, use Clock configuration registers in Reset and Clock Control block
+To setup internal HSI clock, use registers in Reset and Clock Control.
 
-   
+ To enable internal HSI clock, HSION bit(last bit) in RCC_CR register is set to 1. Remaining bits are set to their default value
+
+ ![image](https://github.com/user-attachments/assets/eec12846-c5cd-4a86-b3ca-5ec6a3ffe70d)
+
+ After enabling HSI clock, the prescaler for the clock is selected in RCC_CFGR register. In the program, the bits are set to their default value, setting the prescaler 1. This also selects 8MHz clock for APB1 and APB2 bus.
+
+![image](https://github.com/user-attachments/assets/e405f07f-12c9-468a-9298-f2cbede37c2f)
+
+After configuring clock, the timer should be configured. TIM2, a general purpose timer will be selected as timer to use. Like any peripheral, clock for this timer
+should also be enabled. This is done by setting TIM2_EN at RCC_APB2ENR register.
+
+The timer peripheral has option to set prescalers to configure clock frequency provided to counters. The clock frequency is divided by value at prescaler register (actually TIM2_PSC+1). For value of 7999 at the prescaler, the clock frequency at the counter is Fclk/(7999+1) = 1KHz for 8MHz clock.
+
+![image](https://github.com/user-attachments/assets/c2c0e971-7b23-4083-8059-be8c94de028a)
+
+To genrate square wave (to provide blink output), the counters should be autoreloaded once target value is reached. For 1KHz clock for counter, it will take 1ms to count by 1. So setting 999 in autoreload register (TIM2_ARR), resets the counter after 999 counts and provides 1 second of delay.
+
+![image](https://github.com/user-attachments/assets/5e5f11e6-baee-429c-81a0-93be2b6811d1)
+
+The timer is configured and now counter should be enabled through CEN bit in control register 1 (TIM2_CR1);
+
+![image](https://github.com/user-attachments/assets/01f0fa55-b41c-4c1e-8250-0a624d789bd7)
+
+
+
