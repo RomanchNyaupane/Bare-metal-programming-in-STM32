@@ -29,7 +29,14 @@ void usart_init(USART_Config_t *usartConfig){
 	(*usartConfig).Instance -> BRR &= 0xFFFF0000;//clear BRR
 	(*usartConfig).Instance -> BRR |= (*usartConfig).BaudRate == 9600 ? 0xFFFF0341 : 0xFFFF0000; //only 9600 baudrate is configured here
 
-	while((USART2 -> SR & USART_SR_TXE) == 0); //TXE = 1 indicates non empty register`
+    (*usartConfig).Instance->CR1 |= USART_CR1_RXNEIE; //interrupt enable
+
+    if ((*usartConfig).Instance == USART1)
+        NVIC_EnableIRQ(USART1_IRQn);
+    else if ((*usartConfig).Instance == USART2)
+        NVIC_EnableIRQ(USART2_IRQn);
+
+
     (*usartConfig).Instance -> CR1 |=  USART_CR1_TE ; //enable usart
     (*usartConfig).Instance -> CR1 |=  USART_CR1_RE;
 }
@@ -81,11 +88,26 @@ void usart_tx_main(char *str, USART_Config_t *USART_Config){ //internal function
 	}
 }
 
-uint8_t usart_rx_main(USART_Config_t *USART_Config){
-    while (((*USART_Config).Instance->SR & USART_SR_RXNE) == 0); // Wait for data
-    uint8_t data = (*USART_Config).Instance->DR & 0xFF;          // Read data once
-	return data;
-}
-uint8_t usart_rx(void){
-	return usart_rx_main(&USART_Config);
+//uint8_t usart_rx_main(USART_Config_t *USART_Config){
+//    while (((*USART_Config).Instance->SR & USART_SR_RXNE) == 0); // Wait for data
+//    uint8_t data = (*USART_Config).Instance->DR & 0xFF;          // Read data once
+//	return data;
+//}
+//uint8_t usart_rx(void){
+//	return usart_rx_main(&USART_Config);
+//}
+
+
+
+
+void USART2_IRQHandler(void) {
+    if (USART2->SR & USART_SR_RXNE) {
+        uint8_t data = USART2->DR;   // reading clears RXNE flag
+
+        if (data == 0x38) {          // if '8' received
+            usart_tx("received");
+            GPIOC->ODR ^= GPIO_ODR_ODR13; // toggle LED
+        }
+        else usart_tx("wrong input hehe");
+    }
 }

@@ -15,8 +15,8 @@ void system_setup(USART_Config_t *usartConfig);
 void usart_init(USART_Config_t *usartConfig);
 void usart_tx(char *str); //exposed to user
 void usart_tx_main(char *str, USART_Config_t *usartConfig); //internal function that provides usart port name and data to tx module
-uint8_t usart_rx(void); //exposed to user
-uint8_t usart_rx_main(USART_Config_t *usartConfig); //internal function that provides usart port name to receive data from
+//uint8_t usart_rx(void); //exposed to user
+//uint8_t usart_rx_main(USART_Config_t *usartConfig); //internal function that provides usart port name to receive data from
 
 extern USART_Config_t USART_Config;
 #endif

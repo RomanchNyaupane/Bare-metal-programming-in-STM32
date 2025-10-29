@@ -16,14 +16,14 @@ int main(void)
 
     while (1)
     {
-        uint8_t data = usart_rx();    // wait for incoming data
+        //uint8_t data = usart_rx();    // wait for incoming data
 
-        if (data == 0x38)              // if 'A' received
-        {
-            usart_tx("Hello");
-            GPIOC->ODR ^= GPIO_ODR_ODR13;   // toggle onboard LED
-        }
-        else usart_tx("system uninitialized");
+//        if (data == 0x38)              // if 'A' received
+//        {
+//            usart_tx("Hello");
+//            GPIOC->ODR ^= GPIO_ODR_ODR13;   // toggle onboard LED
+//        }
+//        else usart_tx("system uninitialized");
 
     }
 }
