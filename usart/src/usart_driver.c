@@ -57,9 +57,10 @@ void system_setup(USART_Config_t *usartConfig){
 
 
 
-        RCC -> APB2ENR |= RCC_APB2ENR_IOPCEN;//setting pc13(built in led pin)
-        GPIOC -> CRH &= ~(GPIO_CRH_MODE13 | GPIO_CRH_CNF13);
-	    GPIOC->CRH |= GPIO_CRH_MODE13_1;
+        RCC -> APB2ENR |= RCC_APB2ENR_IOPCEN;
+    	GPIOC -> CRH &= ~(GPIO_CRH_MODE13 | GPIO_CRH_CNF13);
+    	GPIOC->CRH |= GPIO_CRH_MODE13_1;
+    	GPIOC->BSRR = GPIO_BSRR_BS13;  // Set high (LED OFF if active-low)
     }
     if((*usartConfig).Instance == USART2){
         RCC -> APB1ENR |= RCC_APB1ENR_USART2EN;
@@ -70,9 +71,10 @@ void system_setup(USART_Config_t *usartConfig){
 
 
 
-        RCC -> APB2ENR |= RCC_APB2ENR_IOPCEN;//setting pc13(built in led pin)
-        GPIOC -> CRH &= ~(GPIO_CRH_MODE13 | GPIO_CRH_CNF13);
-	    GPIOC->CRH |= GPIO_CRH_MODE13_1;
+        RCC -> APB2ENR |= RCC_APB2ENR_IOPCEN;
+    	GPIOC -> CRH &= ~(GPIO_CRH_MODE13 | GPIO_CRH_CNF13);
+    	GPIOC->CRH |= GPIO_CRH_MODE13_1;
+    	GPIOC->BSRR = GPIO_BSRR_BS13;  // Set high (LED OFF if active-low)
     }
 }
 
