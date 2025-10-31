@@ -53,12 +53,45 @@ void dma_config(){
 //dma1 channel1 interrupt handler
 
 void DMA1_Channel7_IRQHandler(void) {
-    // Clear ALL possible flags at once to prevent repeated interrupts
-    DMA1->IFCR = DMA_IFCR_CGIF7 | DMA_IFCR_CTCIF7 | DMA_IFCR_CHTIF7 | DMA_IFCR_CTEIF7;
+    // Transfer Complete
+    if (DMA1->ISR & DMA_ISR_TCIF7) {
+        DMA1->IFCR |= DMA_IFCR_CTCIF7;   // clear flag
 
-    // Simple LED toggle to confirm ISR execution
-    GPIOC->ODR ^= GPIO_ODR_ODR13;
+        // Brief blink to indicate success
+        GPIOC->BSRR = GPIO_BSRR_BR13;    // LED ON (active-low)
+        for (volatile int i = 0; i < 1000000; i++);
+        GPIOC->BSRR = GPIO_BSRR_BS13;    // LED OFF
+    }
 
-    // Optional: Disable DMA after completion to prevent repeated transfers
-    // DMA1_Channel7->CCR &= ~DMA_CCR_EN;
+    // Half Transfer
+    if (DMA1->ISR & DMA_ISR_HTIF7) {
+        DMA1->IFCR |= DMA_IFCR_CHTIF7;   // clear flag
+
+        // Quick toggle to indicate half transfer
+        GPIOC->ODR ^= GPIO_ODR_ODR13;
+    }
+
+    // Transfer Error
+    if (DMA1->ISR & DMA_ISR_TEIF7) {
+        DMA1->IFCR |= DMA_IFCR_CTEIF7;   // clear flag
+
+        // Fast blinking to indicate error (6 blinks)
+        for (int i = 0; i < 6; i++) {
+            GPIOC->ODR ^= GPIO_ODR_ODR13;
+            for (volatile int d = 0; d < 80000; d++);
+        }
+        GPIOC->BSRR = GPIO_BSRR_BS13;  // Ensure LED is OFF at end
+    }
+
+    //Global interrupt flag clearing (if needed)
+    if (DMA1->ISR & DMA_ISR_GIF7) {
+        DMA1->IFCR |= DMA_IFCR_CGIF7;   // clear flag
+
+        // Fast blinking to indicate error (6 blinks)
+        for (int i = 0; i < 6; i++) {
+            GPIOC->ODR ^= GPIO_ODR_ODR13;
+            for (volatile int d = 0; d < 80000; d++);
+        }
+        GPIOC->BSRR = GPIO_BSRR_BS13;  // Ensure LED is OFF at end
+    }
 }
