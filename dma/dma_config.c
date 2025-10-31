@@ -1,6 +1,6 @@
 #include "stm32f1xx.h"
 #include "usart_driver.h"
-uint8_t data_buffer[5] = {10,20,30,40,50};
+uint8_t data_buffer[5] = {0x10,0x20,0x30,0x40,0x50};
 
 USART_Config_t USART_Config = {
 	.Instance    = USART2,
@@ -12,6 +12,7 @@ USART_Config_t USART_Config = {
 void main(){
 	usart_init(&USART_Config);
 	dma_config();
+	while(1){};
 }
 
 
@@ -43,7 +44,8 @@ void dma_config(){
     DMA1_Channel7 -> CMAR = (uint32_t)memory_address;
 
 
-    NVIC_EnableIRQ(DMA1_Channel7_IRQn); //enable dma1 channel1 interrupt in nvic
+    NVIC_SetPriority(DMA1_Channel7_IRQn, 1);
+    NVIC_EnableIRQ(DMA1_Channel7_IRQn);
 
     DMA1_Channel7 -> CCR |= DMA_CCR_EN; //enable dma channel
 }
@@ -51,34 +53,12 @@ void dma_config(){
 //dma1 channel1 interrupt handler
 
 void DMA1_Channel7_IRQHandler(void) {
-    // Transfer Complete
-    if (DMA1->ISR & DMA_ISR_TCIF7) {
-        DMA1->IFCR |= DMA_IFCR_CTCIF7;   // clear flag
+    // Clear ALL possible flags at once to prevent repeated interrupts
+    DMA1->IFCR = DMA_IFCR_CGIF7 | DMA_IFCR_CTCIF7 | DMA_IFCR_CHTIF7 | DMA_IFCR_CTEIF7;
 
-        // Brief blink to indicate success
-        GPIOC->BSRR = GPIO_BSRR_BR13;    // LED ON (active-low)
-        for (volatile int i = 0; i < 1000000; i++);
-        GPIOC->BSRR = GPIO_BSRR_BS13;    // LED OFF
-    }
+    // Simple LED toggle to confirm ISR execution
+    GPIOC->ODR ^= GPIO_ODR_ODR13;
 
-    // Half Transfer
-    if (DMA1->ISR & DMA_ISR_HTIF7) {
-        DMA1->IFCR |= DMA_IFCR_CHTIF7;   // clear flag
-
-        // Quick toggle to indicate half transfer
-        //GPIOC->ODR ^= GPIO_ODR_ODR13;
-    }
-
-    // Transfer Error
-    if (DMA1->ISR & DMA_ISR_TEIF7) {
-        DMA1->IFCR |= DMA_IFCR_CTEIF7;   // clear flag
-
-        // Fast blinking to indicate error (6 blinks)
-        for (int i = 0; i < 6; i++) {
-            GPIOC->ODR ^= GPIO_ODR_ODR13;
-            for (volatile int d = 0; d < 80000; d++);
-        }
-        GPIOC->BSRR = GPIO_BSRR_BS13;  // Ensure LED is OFF at end
-    }
+    // Optional: Disable DMA after completion to prevent repeated transfers
+    // DMA1_Channel7->CCR &= ~DMA_CCR_EN;
 }
-
