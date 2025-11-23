@@ -20,7 +20,7 @@ typedef struct
 
 void I2C_init (I2C_Config_t *);
 void I2C_deinit (I2C_Config_t *);
-void I2C_transfer (I2C_Config_t *, uint8_t *, uint8_t);
+void I2C_transfer_data (I2C_Config_t *, uint8_t *, uint8_t);
 void I2C_transfer_command (I2C_Config_t *, uint8_t, uint8_t);
 //peripheral setup function will be called inside init function. so not exposed to user and not declared here
 
