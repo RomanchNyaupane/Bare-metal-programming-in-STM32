@@ -98,7 +98,7 @@ uint32_t GetSystemClockFreq(void)
     return sysclk;
 }
 
-//function to get AHB clock (HCLK) frequency
+//function to get AHB1 clock (HCLK) frequency
 uint32_t GetAHBCLKFreq(void)
 {
     uint32_t sysclk = GetSystemClockFreq();
