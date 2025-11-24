@@ -7,17 +7,23 @@ A lightweight I2C-based LCD driver library for STM32L4xx microcontrollers, suppo
 ### I2C Driver (v1.0)
 - Master transmitter mode with 7-bit slave addressing
 - Configurable I2C instances (I2C1, I2C2, I2C3)
-- Adjustable speed modes via TIMINGR register
+- **Automatic I2C speed calculation** based on APB1 clock frequency
 - Automatic GPIO configuration (I2C1: PB8/PB9, I2C2: PB10/PB11, I2C3: PC0/PC1)
 - Data and command transfer functions
 
-### LCD Driver (v1.3)
+### LCD Driver (v1.4)
 - **Display Control**: Initialize, clear screen, and deinitialize LCD
 - **Text Output**: Print strings at current or specified cursor positions
 - **Cursor Management**: Set cursor position (row, column) and reset to home
 - **Display Shifting**: Shift entire display content left or right
 - **Contrast Adjustment**: Set display contrast (0-15 levels)
+- **Dynamic I2C Timing**: Automatically calculates I2C timing for 100kHz operation
 - **20x2 Display Support**: Optimized for 20 columns × 2 rows character LCDs
+
+### Clocking Wizard (v1.0) - NEW!
+- **Clock Frequency Detection**: Automatic system and peripheral clock detection
+- **Multi-source Support**: MSI, HSI16, HSE, and PLL clock sources
+- **Clock Tree Functions**: Get SystemClock, AHB, APB1, and APB2 frequencies
 
 ## Hardware Requirements
 
@@ -30,16 +36,18 @@ A lightweight I2C-based LCD driver library for STM32L4xx microcontrollers, suppo
 
 ```c
 #include "lcd_driver.h"
+#include "clocking_wizard.h"
 
-// Configure LCD with I2C1, custom speed, and slave address
+// Configure LCD - speedMode is calculated automatically
 LCD_Config_t lcd_config = {
     .Instance = I2C1,
-    .speedMode = 0x00503D58,  // Timing value for desired speed
+    .speedMode = 0,  // Auto-calculates based on APB1 clock
     .slaveAddress = 0x78
 };
 
 int main() {
     system_clock();
+    lcd_config.speedMode = set_i2c_speed();
     lcd_init();
     
     lcd_clear_screen();
@@ -75,6 +83,13 @@ int main() {
 - `I2C_deinit(I2C_Config_t*)` - Reset I2C peripheral
 - `I2C_transfer_data(config, data, size)` - Transfer data bytes
 - `I2C_transfer_command(config, cmd, length)` - Send command with data length
+- `set_i2c_speed(void)` - Calculate I2C timing for 100kHz based on APB1 clock
+
+### Clocking Functions
+- `GetSystemClockFreq()` - Returns system clock frequency in Hz
+- `GetAHBCLKFreq()` - Returns AHB (HCLK) frequency
+- `GetAPB1CLKFreq()` - Returns APB1 (PCLK1) frequency
+- `GetAPB2CLKFreq()` - Returns APB2 (PCLK2) frequency
 
 ## Known Limitations
 
