@@ -1,10 +1,12 @@
-// LCD driver source file version 1.3
+// LCD driver source file version 1.4
+// version 1.4 changes: added functions to set i2c speed based on APB1 clock frequency
 // version 1.3 changes: added functions to set contrast and shift display contents
 // version 1.2 changes: added function to reset cursor position
 // version 1.1 changes: added function to set cursor position and clear screen
 // initial version: 1.0
 #include "stm32l4xx.h"
 #include "i2c_driver.h"
+#include "clocking_wizard.h"
 #include "lcd_driver.h"
 #include "string.h"
 
@@ -132,4 +134,91 @@ void lcd_shift_display_right(uint8_t positions)
         I2C_transfer_command(&lcd_config, command, 1);
         I2C_transfer_data(&lcd_config, &data, 1);
     }
+}
+
+
+
+uint32_t set_i2c_speed(void)
+{
+    uint32_t sys_clock = GetSystemClockFreq();
+    uint32_t apb1_clock = GetAPB1CLKFreq();// APB1 peripheral bus clock(I2C clock source)
+    
+    uint32_t presc, scldel, sdadel, sclh, scll;
+    uint32_t timing_value;
+    //calculate timing parameters based on APB1 clock frequency
+    //target: I2C Standard Mode 100kHz (10us period)
+    //t_LOW >= 4.7us, t_HIGH >= 4.0us
+    
+    if (apb1_clock == 16000000) {
+        //16MHz APB1 clock (HSI16)
+        presc = 0x3;      //(PRESC+1) = 4, t_PRESC = 250ns
+        scll = 0x13;      //(SCLL+1) * t_PRESC = 20 * 250ns = 5.0us (t_LOW)
+        sclh = 0xF;      //(SCLH+1) * t_PRESC = 16 * 250ns = 4.0us (t_HIGH)
+        sdadel = 0x2;     //SDADEL * t_PRESC = 2 * 250ns = 500ns (data hold time)
+        scldel = 0x4;     //(SCLDEL+1) * t_PRESC = 5 * 250ns = 1250ns (data setup time)
+        
+        //actual SCL frequency ˜ 1/(5.0us + 4.0us + sync_delays) ˜ 100kHz
+    }
+    else if (apb1_clock == 8000000) {
+        //8MHz APB1 clock
+        presc = 1;      //(PRESC+1) = 2, t_PRESC = 250ns
+        scll = 19;      //20 * 250ns = 5.0us
+        sclh = 15;      //16 * 250ns = 4.0us
+        sdadel = 2;     //2 * 250ns = 500ns
+        scldel = 4;     //5 * 250ns = 1250ns
+    }
+    else if (apb1_clock == 4000000) {
+        //4MHz APB1 clock (MSI default)
+        presc = 0;      //(PRESC+1) = 1, t_PRESC = 250ns
+        scll = 19;      //20 * 250ns = 5.0us
+        sclh = 15;      //16 * 250ns = 4.0us
+        sdadel = 2;     //2 * 250ns = 500ns
+        scldel = 4;     //5 * 250ns = 1250ns
+    }
+    else if (apb1_clock == 48000000) {
+        //48MHz APB1 clock
+        presc = 11;     //(PRESC+1) = 12, t_PRESC = 250ns
+        scll = 19;      //20 * 250ns = 5.0us
+        sclh = 15;      //16 * 250ns = 4.0us
+        sdadel = 2;     //2 * 250ns = 500ns
+        scldel = 4;     //5 * 250ns = 1250ns
+    }
+    else if (apb1_clock == 80000000) {
+        //80MHz APB1 clock (max for STM32L476)
+        presc = 19;     //(PRESC+1) = 20, t_PRESC = 250ns
+        scll = 19;      //20 * 250ns = 5.0us
+        sclh = 15;      //16 * 250ns = 4.0us
+        sdadel = 2;     //2 * 250ns = 500ns
+        scldel = 4;     //5 * 250ns = 1250ns
+    }
+    else {
+        //generic calculation for other frequencies
+        //try to achieve t_PRESC = 250ns by calculating appropriate prescaler
+        //PRESC = (APB1_CLK / 4000000) - 1
+        presc = (apb1_clock / 4000000) - 1;
+        if (presc > 15) presc = 15;  // Limit to 4-bit value (max 15)
+        
+        // Use standard timing values
+        scll = 19;      // 5.0us low time
+        sclh = 15;      // 4.0us high time
+        sdadel = 2;     // 500ns data hold
+        scldel = 4;     // 1250ns data setup
+    }
+    
+    //TIMINGR register value
+    // bit layout:
+    // [31:28] PRESC[3:0]   timing prescaler
+    // [27:24] Reserved
+    // [23:20] SCLDEL[3:0]  data setup time
+    // [19:16] SDADEL[3:0]  data hold time
+    // [15:8]  SCLH[7:0]    SCL high period
+    // [7:0]   SCLL[7:0]    SCL low period
+    
+    timing_value = ((presc & 0xF) << 28) |
+                   ((scldel & 0xF) << 20) |
+                   ((sdadel & 0xF) << 16) |
+                   ((sclh & 0xFF) << 8) |
+                   (scll & 0xFF);
+    
+    return timing_value;
 }

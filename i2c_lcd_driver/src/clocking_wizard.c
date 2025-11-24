@@ -1,8 +1,7 @@
-/*
-Clocking wizard version 1.0
-    -> Provides functions to get system clock and peripheral clock frequencies
-    -> Supports MSI, HSI16, HSE and PLL as system clock sources
-    -> For STM32L4 series microcontrollers
+/*  Clocking wizard version 1.0
+        -> Provides functions to get system clock and peripheral clock frequencies
+        -> Supports MSI, HSI16, HSE and PLL as system clock sources
+        -> For STM32L4 series microcontrollers
 */
 
 #include "stm32l4xx.h"
